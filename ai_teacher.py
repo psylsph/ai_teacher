@@ -38,12 +38,11 @@ st.session_state["model_name"] = st.sidebar.selectbox("Select AI Agent:", option
 st.markdown("#### Hello I am an AI Powered Teacher what shall we learn about today?")
 st.session_state["question"] = st.sidebar.text_area("Enter your question here:")
 
+if not "session_google" in st.session_state:
+    print("Creating chat")
+    create_chat()
 
 if st.sidebar.button("Ask the Teacher"):
     with st.spinner("Mmm thats a good question wait a second or two while a I think about that ..."):
         response = st.session_state["session_google"].send_message(st.session_state["question"])
         st.write(response.text)
-else:
-    if not "session_google" in st.session_state:
-        print("Creating chat")
-        create_chat()

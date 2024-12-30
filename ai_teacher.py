@@ -35,7 +35,7 @@ if st.sidebar.button("New Chat"):
 
 st.sidebar.header("Configuration")
 st.session_state["model_name"] = st.sidebar.selectbox("Select AI Agent:", options=["gemini-1.5-flash-8b-001", "gemini-1.5-flash-002", "gemini-2.0-flash-exp"], index=1)
-st.markdown("### AI-Powered Teacher")
+st.markdown("#### Hello I am an AI Powered Teacher what shall we learn about today?")
 st.session_state["question"] = st.sidebar.text_area("Enter your question here:")
 
 

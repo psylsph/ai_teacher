@@ -3,3 +3,4 @@ openai
 googlesearch-python
 pycountry
 streamlit
+flask_sqlalchemy

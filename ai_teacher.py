@@ -1,10 +1,9 @@
 import streamlit as st
 import google.generativeai as genai
-from google.api_core.exceptions import ResourceExhausted
 import os
 
 def create_chat():
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "AIzaSyBud2LfN_RDdqpWGrlfwnR7Ya86Jo32Iag")
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
     genai.configure(api_key=GOOGLE_API_KEY)
     generation_config = {
         "temperature": 0.3,

@@ -1,6 +1,11 @@
 import streamlit as st
 import google.generativeai as genai
 import os
+import base64
+from PIL import Image as PILImage
+
+if "model_name" not in st.session_state:
+    st.session_state["model_name"] = "gemini-1.5-flash-002"
 
 def create_chat():
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -19,29 +24,58 @@ def create_chat():
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_LOW_AND_ABOVE"},
         ]
     model_object = genai.GenerativeModel(
-    model_name=st.session_state["model_name"],
-    safety_settings=safety_settings,
-    generation_config=generation_config,
-    system_instruction=system_instructions,
+        model_name=st.session_state["model_name"],
+        safety_settings=safety_settings,
+        generation_config=generation_config,
+        system_instruction=system_instructions,
     )
 
-    st.session_state["session_google"] = model_object.start_chat(history=[])    
+    st.session_state["session_google"] = model_object.start_chat(history=[])
+    print("Chat session started")
+
+if "session_google" not in st.session_state:
+    create_chat()
+
+def on_new_chat():
+    create_chat()
 
 st.set_page_config(layout="wide")
-if st.sidebar.button("New Chat"):
-    print("Creating chat")
-    create_chat()
+
+st.sidebar.button("New Chat", on_click=on_new_chat)
+  
 
 st.sidebar.header("Configuration")
 st.session_state["model_name"] = st.sidebar.selectbox("Select AI Agent:", options=["gemini-1.5-flash-8b-001", "gemini-1.5-flash-002", "gemini-2.0-flash-exp"], index=1)
 st.markdown("#### Hello I am an AI Powered Teacher what shall we learn about today?")
-st.session_state["question"] = st.sidebar.text_area("Enter your question here:")
 
-if not "session_google" in st.session_state:
-    print("Creating chat")
-    create_chat()
+def reset_image_sent_state():
+    st.session_state["image_sent_state"] = False
 
-if st.sidebar.button("Ask the Teacher"):
-    with st.spinner("Mmm thats a good question wait a second or two while a I think about that ..."):
-        response = st.session_state["session_google"].send_message(st.session_state["question"])
-        st.write(response.text)
+if "upload_file" not in st.session_state:
+    st.session_state["upload_file"] = None
+st.session_state["upload_file"] = st.sidebar.file_uploader("Choose a document...", type=["jpg", "jpeg", "png", "pdf"], on_change=reset_image_sent_state)
+
+question = st.chat_input("Ask me anything ...")
+if question:
+    st.markdown(f"*The student has asked me to: {question}*")
+    with st.spinner("Please wait a second or two while a I think about that ..."):
+        if st.session_state["upload_file"] is None or st.session_state["image_sent_state"]:
+            response = st.session_state["session_google"].send_message(question)
+        elif st.session_state["upload_file"].type == "application/pdf":
+            pdf = st.session_state["upload_file"]
+            response = st.session_state["session_google"].send_message([{'mime_type':'application/pdf', 
+                                                                       'data': base64.b64encode(pdf.getvalue()).decode('utf-8')}, 
+                                                                      question])
+        else:
+            image = st.session_state["upload_file"]
+            base_width = 300
+            img = PILImage.open(image)
+            wpercent = (base_width / float(img.size[0]))
+            hsize = int((float(img.size[1]) * float(wpercent)))
+            preview_img = img.resize((base_width, hsize), PILImage.Resampling.LANCZOS)
+            st.image(preview_img)
+            response = st.session_state["session_google"].send_message([{'mime_type':'image/jpeg', 
+                                                                       'data': base64.b64encode(image.getvalue()).decode('utf-8')}, 
+                                                                      question])
+        st.session_state["image_sent_state"] = True
+        st.markdown(response.text)

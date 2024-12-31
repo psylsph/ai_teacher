@@ -57,7 +57,7 @@ st.session_state["upload_file"] = st.sidebar.file_uploader("Choose a document...
 
 question = st.chat_input("Ask me anything ...")
 if question:
-    st.markdown(f"*The student has asked me to: {question}*")
+    st.markdown(f"*The student has asked me: {question}*")
     with st.spinner("Please wait a second or two while a I think about that ..."):
         if st.session_state["upload_file"] is None or st.session_state["image_sent_state"]:
             response = st.session_state["session_google"].send_message(question)
